@@ -1,0 +1,13 @@
+import createNodeHelpers from "gatsby-node-helpers";
+
+// Node prefix
+const TYPE_PREFIX = `ShopifyAdmin`;
+
+// Node types
+const PRODUCT_VARIANT = `ProductVariant`;
+
+const { createNodeFactory } = createNodeHelpers({
+  typePrefix: TYPE_PREFIX
+});
+
+export const ProductVariantNode = () => createNodeFactory(PRODUCT_VARIANT);
