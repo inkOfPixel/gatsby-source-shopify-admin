@@ -25,6 +25,7 @@ export const COLLECTIONS_QUERY = `
         cursor
         node {
           id
+          handle
           sortOrder
         }
       }
