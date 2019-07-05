@@ -55,28 +55,31 @@ const queryOnce = async (client, query, first = 250, after) => await client.rawR
 exports.queryOnce = queryOnce;
 
 const queryAll = async (client, path, query, first = 250, after = null, aggregatedResponse = null) => {
-  const {
-    data,
-    extensions,
-    errors
-  } = await queryOnce(client, query, first, after);
+  try {
+    const {
+      data,
+      extensions,
+      errors
+    } = await queryOnce(client, query, first, after);
+    const edges = (0, _fp.get)([...path, `edges`], data);
+    const nodes = edges.map(edge => ({ ...edge.node,
+      id: Buffer.from(edge.node.id).toString("base64")
+    }));
+    aggregatedResponse = aggregatedResponse ? aggregatedResponse.concat(nodes) : nodes;
 
-  if (errors && extensions.cost.throttleStatus.currentlyAvailable < extensions.cost.requestedQueryCost) {
-    await sleep(1000 * extensions.cost.requestedQueryCost / 50);
-    return queryAll(client, path, query, first, after, aggregatedResponse);
+    if ((0, _fp.get)([...path, `pageInfo`, `hasNextPage`], data)) {
+      return queryAll(client, path, query, first, (0, _fp.last)(edges).cursor, aggregatedResponse);
+    }
+
+    return aggregatedResponse;
+  } catch (e) {
+    if (e.errors && e.extensions.cost.throttleStatus.currentlyAvailable < e.extensions.cost.requestedQueryCost) {
+      await sleep(1000 * extensions.cost.requestedQueryCost / 50);
+      return queryAll(client, path, query, first, after, aggregatedResponse);
+    }
+
+    return aggregatedResponse;
   }
-
-  const edges = (0, _fp.get)([...path, `edges`], data);
-  const nodes = edges.map(edge => ({ ...edge.node,
-    id: Buffer.from(edge.node.id).toString("base64")
-  }));
-  aggregatedResponse = aggregatedResponse ? aggregatedResponse.concat(nodes) : nodes;
-
-  if ((0, _fp.get)([...path, `pageInfo`, `hasNextPage`], data)) {
-    return queryAll(client, path, query, first, (0, _fp.last)(edges).cursor, aggregatedResponse);
-  }
-
-  return aggregatedResponse;
 };
 
 exports.queryAll = queryAll;

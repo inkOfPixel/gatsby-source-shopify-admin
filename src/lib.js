@@ -46,44 +46,47 @@ export const queryAll = async (
   after = null,
   aggregatedResponse = null
 ) => {
-  const { data, extensions, errors } = await queryOnce(
-    client,
-    query,
-    first,
-    after
-  );
-
-  if (
-    errors &&
-    extensions.cost.throttleStatus.currentlyAvailable <
-      extensions.cost.requestedQueryCost
-  ) {
-    await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
-    return queryAll(client, path, query, first, after, aggregatedResponse);
-  }
-
-  const edges = get([...path, `edges`], data);
-  const nodes = edges.map(edge => ({
-    ...edge.node,
-    id: Buffer.from(edge.node.id).toString("base64")
-  }));
-
-  aggregatedResponse = aggregatedResponse
-    ? aggregatedResponse.concat(nodes)
-    : nodes;
-
-  if (get([...path, `pageInfo`, `hasNextPage`], data)) {
-    return queryAll(
+  try {
+    const { data, extensions, errors } = await queryOnce(
       client,
-      path,
       query,
       first,
-      last(edges).cursor,
-      aggregatedResponse
+      after
     );
-  }
 
-  return aggregatedResponse;
+    const edges = get([...path, `edges`], data);
+    const nodes = edges.map(edge => ({
+      ...edge.node,
+      id: Buffer.from(edge.node.id).toString("base64")
+    }));
+
+    aggregatedResponse = aggregatedResponse
+      ? aggregatedResponse.concat(nodes)
+      : nodes;
+
+    if (get([...path, `pageInfo`, `hasNextPage`], data)) {
+      return queryAll(
+        client,
+        path,
+        query,
+        first,
+        last(edges).cursor,
+        aggregatedResponse
+      );
+    }
+
+    return aggregatedResponse;
+  } catch (e) {
+    if (
+      e.errors &&
+      e.extensions.cost.throttleStatus.currentlyAvailable <
+        e.extensions.cost.requestedQueryCost
+    ) {
+      await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
+      return queryAll(client, path, query, first, after, aggregatedResponse);
+    }
+    return aggregatedResponse;
+  }
 };
 
 function sleep(milliseconds) {
