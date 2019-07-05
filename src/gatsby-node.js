@@ -1,8 +1,8 @@
 import chalk from "chalk";
 import { forEach } from "p-iteration";
 import { createClient, printGraphQLError, queryAll } from "./lib";
-import { ProductVariantNode } from "./nodes";
-import { PRODUCT_VARIANTS_QUERY } from "./queries";
+import { ProductVariantNode, CollectionNode } from "./nodes";
+import { PRODUCT_VARIANTS_QUERY, COLLECTIONS_QUERY } from "./queries";
 
 export const sourceNodes = async (
   { actions: { createNode, touchNode }, createNodeId, store, cache },
@@ -34,14 +34,13 @@ export const sourceNodes = async (
     const msg = formatMsg(`finished fetching data from Shopify`);
 
     console.time(msg);
-    await Promise.all([
-      createNodes(
-        `productVariants`,
-        PRODUCT_VARIANTS_QUERY,
-        ProductVariantNode,
-        args
-      )
-    ]);
+    await createNodes(
+      `productVariants`,
+      PRODUCT_VARIANTS_QUERY,
+      ProductVariantNode,
+      args
+    );
+    await createNodes(`collections`, COLLECTIONS_QUERY, CollectionNode, args);
     console.timeEnd(msg);
   } catch (e) {
     console.error(chalk`\n{red error} an error occured while sourcing data`);

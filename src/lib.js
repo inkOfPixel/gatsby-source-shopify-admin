@@ -45,7 +45,21 @@ export const queryAll = async (
   after = null,
   aggregatedResponse = null
 ) => {
-  const { data, extensions } = await queryOnce(client, query, first, after);
+  const { data, extensions, errors } = await queryOnce(
+    client,
+    query,
+    first,
+    after
+  );
+
+  if (
+    errors &&
+    extensions.cost.throttleStatus.currentlyAvailable <
+      extensions.cost.requestedQueryCost
+  ) {
+    await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
+    return queryAll(client, path, query, first, after, aggregatedResponse);
+  }
 
   const edges = get([...path, `edges`], data);
   const nodes = edges.map(edge => ({
@@ -58,12 +72,6 @@ export const queryAll = async (
     : nodes;
 
   if (get([...path, `pageInfo`, `hasNextPage`], data)) {
-    if (
-      extensions.cost.throttleStatus.currentlyAvailable <
-      extensions.cost.requestedQueryCost
-    ) {
-      await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
-    }
     return queryAll(
       client,
       path,
