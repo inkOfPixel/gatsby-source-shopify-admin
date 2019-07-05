@@ -16,7 +16,8 @@ var _fp = require("lodash/fp");
  */
 const createClient = (shopName, accessToken) => new _graphqlRequest.GraphQLClient(`https://${shopName}.myshopify.com/admin/api/2019-04/graphql.json`, {
   headers: {
-    "X-Shopify-Access-Token": accessToken
+    "X-Shopify-Access-Token": accessToken,
+    "X-GraphQL-Cost-Include-Fields": true
   }
 });
 /**

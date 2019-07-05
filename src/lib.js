@@ -10,7 +10,8 @@ export const createClient = (shopName, accessToken) =>
     `https://${shopName}.myshopify.com/admin/api/2019-04/graphql.json`,
     {
       headers: {
-        "X-Shopify-Access-Token": accessToken
+        "X-Shopify-Access-Token": accessToken,
+        "X-GraphQL-Cost-Include-Fields": true
       }
     }
   );
