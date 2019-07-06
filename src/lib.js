@@ -73,15 +73,11 @@ export const queryAll = async (
 
     return aggregatedResponse;
   } catch (e) {
-    console.log(e);
-    console.log("EXC_ " + after);
     if (
-      e.errors &&
-      e.extensions.cost.throttleStatus.currentlyAvailable <
-        e.extensions.cost.requestedQueryCost
+      e.response.extensions.cost.throttleStatus.currentlyAvailable <
+      e.response.extensions.cost.requestedQueryCost
     ) {
-      await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
-      console.log("EXC_ " + after);
+      await sleep((1000 * e.response.extensions.cost.requestedQueryCost) / 50);
       return queryAll(client, path, query, first, after, aggregatedResponse);
     }
     return aggregatedResponse;
