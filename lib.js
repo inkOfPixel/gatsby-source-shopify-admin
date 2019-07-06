@@ -72,6 +72,9 @@ const queryAll = async (client, path, query, first = 250, after = null, aggregat
 
     return aggregatedResponse;
   } catch (e) {
+    console.log(e);
+    console.log("EXC_ " + after);
+
     if (e.errors && e.extensions.cost.throttleStatus.currentlyAvailable < e.extensions.cost.requestedQueryCost) {
       await sleep(1000 * extensions.cost.requestedQueryCost / 50);
       console.log("EXC_ " + after);

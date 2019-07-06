@@ -73,6 +73,8 @@ export const queryAll = async (
 
     return aggregatedResponse;
   } catch (e) {
+    console.log(e);
+    console.log("EXC_ " + after);
     if (
       e.errors &&
       e.extensions.cost.throttleStatus.currentlyAvailable <
