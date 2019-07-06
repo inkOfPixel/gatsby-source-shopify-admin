@@ -56,10 +56,9 @@ exports.queryOnce = queryOnce;
 
 const queryAll = async (client, path, query, first = 250, after = null, aggregatedResponse = null) => {
   try {
+    console.log(after);
     const {
-      data,
-      extensions,
-      errors
+      data
     } = await queryOnce(client, query, first, after);
     const edges = (0, _fp.get)([...path, `edges`], data);
     const nodes = edges.map(edge => ({ ...edge.node,
