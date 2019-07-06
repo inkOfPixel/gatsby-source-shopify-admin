@@ -79,6 +79,7 @@ export const queryAll = async (
         e.extensions.cost.requestedQueryCost
     ) {
       await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
+      console.log("EXC_ " + after);
       return queryAll(client, path, query, first, after, aggregatedResponse);
     }
     return aggregatedResponse;
