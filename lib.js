@@ -56,7 +56,6 @@ exports.queryOnce = queryOnce;
 
 const queryAll = async (client, path, query, first = 250, after = null, aggregatedResponse = null) => {
   try {
-    console.log(after);
     const {
       data
     } = await queryOnce(client, query, first, after);

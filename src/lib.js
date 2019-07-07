@@ -47,7 +47,6 @@ export const queryAll = async (
   aggregatedResponse = null
 ) => {
   try {
-    console.log(after);
     const { data } = await queryOnce(client, query, first, after);
 
     const edges = get([...path, `edges`], data);
