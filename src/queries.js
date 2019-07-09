@@ -14,3 +14,21 @@ export const PRODUCT_VARIANTS_QUERY = `
     }
   }
 `;
+
+export const COLLECTIONS_QUERY = `
+  query GetCollections {
+    collections(first: 50) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          handle
+          sortOrder
+        }
+      }
+    }
+	}
+`;

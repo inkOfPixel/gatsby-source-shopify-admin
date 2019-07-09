@@ -10,7 +10,8 @@ export const createClient = (shopName, accessToken) =>
     `https://${shopName}.myshopify.com/admin/api/2019-04/graphql.json`,
     {
       headers: {
-        "X-Shopify-Access-Token": accessToken
+        "X-Shopify-Access-Token": accessToken,
+        "X-GraphQL-Cost-Include-Fields": true
       }
     }
   );
@@ -45,36 +46,41 @@ export const queryAll = async (
   after = null,
   aggregatedResponse = null
 ) => {
-  const { data, extensions } = await queryOnce(client, query, first, after);
+  try {
+    const { data } = await queryOnce(client, query, first, after);
 
-  const edges = get([...path, `edges`], data);
-  const nodes = edges.map(edge => ({
-    ...edge.node,
-    id: Buffer.from(edge.node.id).toString("base64")
-  }));
+    const edges = get([...path, `edges`], data);
+    const nodes = edges.map(edge => ({
+      ...edge.node,
+      id: Buffer.from(edge.node.id).toString("base64")
+    }));
 
-  aggregatedResponse = aggregatedResponse
-    ? aggregatedResponse.concat(nodes)
-    : nodes;
+    aggregatedResponse = aggregatedResponse
+      ? aggregatedResponse.concat(nodes)
+      : nodes;
 
-  if (get([...path, `pageInfo`, `hasNextPage`], data)) {
-    if (
-      extensions.cost.throttleStatus.currentlyAvailable <
-      extensions.cost.requestedQueryCost
-    ) {
-      await sleep((1000 * extensions.cost.requestedQueryCost) / 50);
+    if (get([...path, `pageInfo`, `hasNextPage`], data)) {
+      return queryAll(
+        client,
+        path,
+        query,
+        first,
+        last(edges).cursor,
+        aggregatedResponse
+      );
     }
-    return queryAll(
-      client,
-      path,
-      query,
-      first,
-      last(edges).cursor,
-      aggregatedResponse
-    );
-  }
 
-  return aggregatedResponse;
+    return aggregatedResponse;
+  } catch (e) {
+    if (
+      e.response.extensions.cost.throttleStatus.currentlyAvailable <
+      e.response.extensions.cost.requestedQueryCost
+    ) {
+      await sleep((1000 * e.response.extensions.cost.requestedQueryCost) / 50);
+      return queryAll(client, path, query, first, after, aggregatedResponse);
+    }
+    return aggregatedResponse;
+  }
 };
 
 function sleep(milliseconds) {
